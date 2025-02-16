@@ -12,7 +12,7 @@ class Reservations:
 		self.start_time = start_time
 		self.end_time = end_time
 
-		def __repr__(self): # for debugging purposes - prints string of object
+	def __repr__(self): # for debugging purposes - prints string of object
 			return(f"Reservation(room_id='{self.room_id}', "
 		  		   f"start_time='{self.start_time}', end_time='{self.end_time}')")
 
