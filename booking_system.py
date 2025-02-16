@@ -76,6 +76,12 @@ def display_sub_menu_3():
 
 def add_reservation(room_name, start_time, end_time):
 	# TODO: implement logic for adding a reservation
+	# Pseudo: perform CHECK/COMPARISON of stored reservations-
+	#		  attributes with parameters entered with call to function-
+	#		  IF conflict exsists -> return otherwise CREATE-
+	#		  Reservations-object and pass parameters to object initiation-
+	#		  and APPEND object to global ARRAY end with PRINT-message-
+	#		  using suitable informative content
 	pass
 
 def remove_reservation():
