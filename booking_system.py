@@ -1,8 +1,16 @@
 """	
-	Initial template design(class-body) and basic menu layout - frst1301 
+	Initial template design and basic menu layout - frst1301 
+"""
+"""
+	Added functionality(actually working) of: adding reservation, removal of and search op.
+	
+	Converted menu functionality of earlier "intermediary" functions to actual methods of action when making a
+		selection in the menu and commented out the previous implementation of selection-definitions.
 """
 import os
 import platform
+
+from datetime import datetime
 
 rooms = []	# array to hold rooms available during runtime
 reservations = []	# array to store reservations during runtime
@@ -15,7 +23,7 @@ class Reservation:
 		self.start_time = start_time
 		self.end_time = end_time
 
-	def __repr__(self): # for debugging purposes - prints contents of object as string
+	def __repr__(self): # for debugging purposes - prints string of object
 			return(f"Reservation(usr_id='{self.usr_id}', res_id='{self.res_id}', room={self.room}, "
 		  		   f"start_time='{self.start_time}', end_time='{self.end_time}')")
 
@@ -25,7 +33,7 @@ class Room:
 		self.room_name = room_name
 		self.is_reservable = is_reservable
 
-	def __repr__(self):	# for debugging purposes - prints contents of object as string
+	def __repr__(self):
 		return f"Room(room_id='{self.room_id}', room_name='{self.room_name}', is_reservable={self.is_reservable})"
 
 # clear/update terminal window during menu-nav
@@ -71,33 +79,93 @@ def handle_main_menu_selection(selection):
 def handle_option_1():
 	clear_terminal()
 	print("Make Reservation")
-	display_sub_menu_1()
+
+	cnf = input("Do you want to proceed making a reservation?(y/n): ")
+	if cnf.lower() != 'y':
+		print("Aborting reservation. Returning to the main menu.")
+		input("Press Enter to return to the main menu.")
+		return
+
+	print("Available Rooms:")
+	for room in rooms:
+		if room.is_reservable:
+			print(f"Room ID: {room.room_id}, Room Name: {room.room_name}")
+		
+	room_id = input("Enter Room ID: ")
+	usr_id = input("Enter User ID: ")
+	res_id = input("Enter Reservation ID: ")
+
+	while True:
+		try:
+			start_time = input("Enter Start Time (YYYY-MM-DD HH:MM): ")
+			start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
+			break
+		except ValueError:
+			print("Invalid format for start time.")
+
+	while True:
+		try:
+			end_time = input("Enter End Time (YYYY-MM-DD HH:MM): ")
+			end_time = datetime.strptime(end_time, '%Y-%m-%d %H:%M')
+			break
+		except ValueError:
+			print("Invalid format for end time.")
+
+	add_reservation(res_id, usr_id, room_id, start_time, end_time)
+	input("Press Enter to return to the main menu.")
+	#display_sub_menu_1()
 
 def handle_option_2():
 	clear_terminal()
 	print("Change Reservation")
-	display_sub_menu_2()
+	#display_sub_menu_2()
 
 def handle_option_3():
 	clear_terminal()
 	print("Print Reservation(s)")
-	display_sub_menu_3()
+	#display_sub_menu_3()
 
 def handle_option_4():
 	clear_terminal()
 	print("Search")
-	display_sub_menu_4()
+
+	reservations.sort(key=lambda x: x.res_id)
+	search_id = input("Enter Reservation ID to search: ")
+
+	found_res = search_reservation(search_id)
+	if found_res:
+		print(f"Reservation found: {found_res}")
+	else:
+		print("Reservation not found")
+
+	input("Press Enter to return to the main menu.")
+	#display_sub_menu_4()
 
 def handle_option_5():
 	clear_terminal()
 	print("Remove Reservation")
-	display_sub_menu_5()
+
+	if not reservations:
+		print("No reservations to be removed.")
+		input("Press Enter to return to main menu.")
+		return
+	
+	print("Removable Reservations:")
+	for res in reservations:
+		print(f"Reservation ID: {res.res_id}, User ID: {res.usr_id}, Room ID: {res.room.room_id}, Start Time: {res.start_time}, End Time: {res.end_time}")
+
+
+	s_id = input("Enter Reservation ID to be removed: ")
+
+	remove_reservation(s_id)
+	input("Press Enter to return to the main menu.")
+	#display_sub_menu_5()
 
 def handle_option_6():
 	clear_terminal()
 	print("Store to file")
-	display_sub_menu_6()
-
+	#display_sub_menu_6()
+"""
 def display_sub_menu_1():
 	#clear_terminal()
 	#print("Make/Change Reservations")
@@ -129,7 +197,7 @@ def display_sub_menu_5():
 
 def display_sub_menu_6():
 	input("Press Enter to return to the main menu.")
-
+"""
 def add_reservation(res_id, usr_id, room_id, start_time, end_time):
 	# TODO: implement logic for adding a reservation
 
@@ -147,25 +215,59 @@ def add_reservation(res_id, usr_id, room_id, start_time, end_time):
 			if reservation.room.room_id == room_id and not (end_time <= reservation.start_time or start_time >= reservation.end_time):
 				print("Error: Room/Object is already reserved for the specified time interval")
 				return
-	pass
+			
+		tmp_res = Reservation(room, usr_id, res_id, start_time, end_time)
+		reservations.append(tmp_res)
+		room.is_reservable = False
+		print(f"Reservation succesfully made: {tmp_res}")
+	else:
+		print(f"Error: Room is not available or is not present in the system")
 
-def search_reservation():
-	pass
+def search_reservation(target_res_id):
 
-def remove_reservation():
+	#sorted_res = sorted(reservations, key=lambda x: x.res_id)
+	left, right = 0, len(reservations) - 1
+
+	while left <= right:
+		mid = (left + right) // 2
+		if reservations[mid].res_id == target_res_id:
+			return reservations[mid]
+		elif reservations[mid].res_id < target_res_id:
+			left = mid + 1
+		else:
+			right = mid - 1
+	return None
+
+def remove_reservation(res_id):
 	# TODO: implement logic for removing a reservation
-	pass
+	res = next((r for r in reservations if r.res_id == res_id), None)
+	if res:
+		reservations.remove(res)
+		res.room.is_reservable = True
+		print(f"Reservation successfully removed: {res}")
+	else:
+		print(f"Error: Reservation not found.")
 
 def print_reservations():
 	# TODO: implement logic for printing reservations
 	pass
 
 def store_to_file():
+	# TODO: implement logic for store-to-file functionality
 	pass
 
 def main():
 	# TODO: create dummy room/reservable-objects and push to designated array..
-
+	r1 = Room("R001", "Room1", True)
+	r2 = Room("R002", "Room2", True)
+	r3 = Room("R003", "Room3", True)
+	r4 = Room("R004", "Room4", True)
+	r5 = Room("S006", "Storage6", True)
+	rooms.append(r1)
+	rooms.append(r2)
+	rooms.append(r3)
+	rooms.append(r4)
+	rooms.append(r5)
 
 
 	while True:
