@@ -3,7 +3,6 @@
 """
 """
 	Added functionality(actually working) of: adding reservation, removal of and search op.
-	
 	Converted menu functionality of earlier "intermediary" functions to actual methods of action when making a
 		selection in the menu and commented out the previous implementation of selection-definitions.
 """
@@ -78,19 +77,19 @@ def handle_main_menu_selection(selection):
 
 def handle_option_1():
 	clear_terminal()
-	print("Make Reservation")
+	print("Make Reservation")	
 
+	print("Available Rooms:")
+	for room in rooms:
+		#if room.is_reservable:
+			print(f"Room ID: {room.room_id}, Room Name: {room.room_name}")
+			
 	cnf = input("Do you want to proceed making a reservation?(y/n): ")
 	if cnf.lower() != 'y':
 		print("Aborting reservation. Returning to the main menu.")
 		input("Press Enter to return to the main menu.")
 		return
 
-	print("Available Rooms:")
-	for room in rooms:
-		if room.is_reservable:
-			print(f"Room ID: {room.room_id}, Room Name: {room.room_name}")
-		
 	room_id = input("Enter Room ID: ")
 	usr_id = input("Enter User ID: ")
 	res_id = input("Enter Reservation ID: ")
@@ -154,6 +153,11 @@ def handle_option_5():
 	for res in reservations:
 		print(f"Reservation ID: {res.res_id}, User ID: {res.usr_id}, Room ID: {res.room.room_id}, Start Time: {res.start_time}, End Time: {res.end_time}")
 
+	cnf = input("Do you want to proceed removing a reservation?(y/n): ")
+	if cnf.lower() != 'y':
+		print("Aborting removal process. Returning to the main menu.")
+		input("Press Enter to return to the main menu.")
+		return
 
 	s_id = input("Enter Reservation ID to be removed: ")
 
@@ -172,7 +176,7 @@ def display_sub_menu_1():
 	# add logic to this menu-selection here!
 	ro = Room("01", "Room01", True)	# debug instance of room-obj
 	r = Reservation(ro, "frst", "001", 1000, 1350) # debug instance of reservation-obj
-	print(r)	# printing __repr__ string of r, ro respectively (ro) is actually a chained print invokation?
+	print(r)	# printing __repr__ string of r, ro respectively
 	input("Press Enter to return to the main menu.")
 
 def display_sub_menu_2():
@@ -200,7 +204,6 @@ def display_sub_menu_6():
 """
 def add_reservation(res_id, usr_id, room_id, start_time, end_time):
 	# TODO: implement logic for adding a reservation
-
 	# Pseudo: perform CHECK/COMPARISON of stored reservations-
 	#		  attributes with parameters entered with call to function-
 	#		  IF conflict exsists -> return otherwise CREATE-
@@ -210,7 +213,8 @@ def add_reservation(res_id, usr_id, room_id, start_time, end_time):
 
 	# example of how implementation could look like follow below: --
 	room = next((r for r in rooms if r.room_id == room_id), None)
-	if room and room.is_reservable:
+	#if room and room.is_reservable:
+	if room:
 		for reservation in reservations:
 			if reservation.room.room_id == room_id and not (end_time <= reservation.start_time or start_time >= reservation.end_time):
 				print("Error: Room/Object is already reserved for the specified time interval")
@@ -218,7 +222,7 @@ def add_reservation(res_id, usr_id, room_id, start_time, end_time):
 			
 		tmp_res = Reservation(room, usr_id, res_id, start_time, end_time)
 		reservations.append(tmp_res)
-		room.is_reservable = False
+		#room.is_reservable = False
 		print(f"Reservation succesfully made: {tmp_res}")
 	else:
 		print(f"Error: Room is not available or is not present in the system")
@@ -243,7 +247,7 @@ def remove_reservation(res_id):
 	res = next((r for r in reservations if r.res_id == res_id), None)
 	if res:
 		reservations.remove(res)
-		res.room.is_reservable = True
+		#res.room.is_reservable = True
 		print(f"Reservation successfully removed: {res}")
 	else:
 		print(f"Error: Reservation not found.")
@@ -255,6 +259,14 @@ def print_reservations():
 def store_to_file():
 	# TODO: implement logic for store-to-file functionality
 	pass
+
+def update_reservation():
+	current_time = datetime.now()
+	global reservations
+	#reservations = [res for res in reservations if res.end_time > current_time]
+	#for room in rooms:
+		#room.is_reservable = all(reservation.room != room for reservation in reservations)
+	reservations = list((res for res in reservations if res.end_time > current_time))
 
 def main():
 	# TODO: create dummy room/reservable-objects and push to designated array..
@@ -271,6 +283,7 @@ def main():
 
 
 	while True:
+		update_reservation()
 		display_main_menu()
 		selection = input("Please enter your selection: ")
 		handle_main_menu_selection(selection)
