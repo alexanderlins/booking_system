@@ -6,6 +6,15 @@
 	Converted menu functionality of earlier "intermediary" functions to actual methods of action when making a
 		selection in the menu and commented out the previous implementation of selection-definitions.
 """
+"""
+	READ THIS FIRST!
+	Suggestions when implementing previously discussed log-in function: in the process of creating the structure for
+	said log-in function with respect to existing implementations and to minimize potential conflicts that may arise -> try to-
+	add to function: "handle_main_menu_selection()"-found at: L:65; a co-condition as a token: an additional conditional-
+	criteria aside the current numerical selection e.g. : selection == 1 and then to -> selection == 1 && token, and to
+	let the token grant the user access to otherwise prohibited functions such as "add reservations" and "remove reservations"
+	thus minimizing interference with existing code...
+"""
 import os
 import platform
 
