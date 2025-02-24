@@ -15,10 +15,13 @@
 	let the token grant the user access to otherwise prohibited functions such as "add reservations" and "remove reservations"
 	thus minimizing interference with existing code...
 """
+import getpass
 import os
 import platform
 
 from datetime import datetime
+
+usr_id = ""  # Global variable to store user id of logged in user. Set in login()
 
 rooms = []	# array to hold rooms available during runtime
 reservations = []	# array to store reservations during runtime
@@ -100,7 +103,6 @@ def handle_option_1():
 		return
 
 	room_id = input("Enter Room ID: ")
-	usr_id = input("Enter User ID: ")
 	res_id = input("Enter Reservation ID: ")
 
 	while True:
@@ -277,7 +279,31 @@ def update_reservation():
 		#room.is_reservable = all(reservation.room != room for reservation in reservations)
 	reservations = list((res for res in reservations if res.end_time > current_time))
 
+def login():
+	valid_users = {
+		"anwa2301": "Java",
+		"frst1301": "CSS",
+		"igli2400": "Assembly",
+		"anov2400": "JavaScript"
+    }
+
+	while True:
+		global usr_id
+		username = input("Enter your username: ")
+		password = getpass.getpass("Enter your password: ")  # Use getpass to hide the input
+		clear_terminal()
+
+		if username in valid_users and valid_users[username] == password:
+			usr_id = username
+			print(f"Welcome, {usr_id}!")
+			input("Press Enter to continue.")
+			break
+		else:
+			print("Invalid username or password. Please try again.")
+
+
 def main():
+	login()
 	# TODO: create dummy room/reservable-objects and push to designated array..
 	r1 = Room("R001", "Room1", True)
 	r2 = Room("R002", "Room2", True)
@@ -289,7 +315,7 @@ def main():
 	rooms.append(r3)
 	rooms.append(r4)
 	rooms.append(r5)
-
+	
 
 	while True:
 		update_reservation()
