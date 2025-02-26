@@ -296,10 +296,11 @@ def login():
 		global usr_id
 		username = input("Enter your username: ")
 		password = getpass.getpass("Enter your password: ")  # Use getpass to hide the input
-		hashed_password = hash_password(password, valid_users[username]["salt"])
+		#hashed_password = hash_password(password, valid_users[username]["salt"])
 		clear_terminal()
 
-		if username in valid_users and valid_users[username]["hashed_password"] == hashed_password:
+		# Check if stored hash = generated hash
+		if username in valid_users and valid_users[username]["hashed_password"] == hash_password(password, valid_users[username]["salt"]):
 			usr_id = username
 			print(f"Welcome, {usr_id}!")
 			input("Press Enter to continue.")
