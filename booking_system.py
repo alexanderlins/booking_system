@@ -18,6 +18,7 @@
 import getpass
 import os
 import platform
+import hashlib
 
 from datetime import datetime
 
@@ -279,21 +280,26 @@ def update_reservation():
 		#room.is_reservable = all(reservation.room != room for reservation in reservations)
 	reservations = list((res for res in reservations if res.end_time > current_time))
 
+def hash_password(pwd, salt):
+    return hashlib.sha256((salt + pwd).encode()).hexdigest()
+
 def login():
 	valid_users = {
-		"anwa2301": "Java",
-		"frst1301": "CSS",
-		"igli2400": "Assembly",
-		"anov2400": "JavaScript"
+		"anwa2301": {"salt": "bc998cdbf30b03db581244bf75394dec", "hashed_password": "d72cc55563ba330722af5d880386b7c77336191d7b6b72689da0c9cf58693e32"},
+		"frst1301": {"salt": "596360727e1c668231c4fc73791bf7a3", "hashed_password": "942e704242a0c283363459fc13d9e34ad7e8c257ea1eb18ee8c217311782f3f9"},
+		"igli2400": {"salt": "c53bc1d98d5bdb7adf52ca1db4790995", "hashed_password": "03dfef70dc27636d8866ae0a49f7347a7ecc30eeeeb439b0c00b86965ceb5ebc"},
+		"anov2400": {"salt": "d1ce2657667364d4947c27a45ebfa479", "hashed_password": "4ff4a209abcf96dc7966fc710b237393e760c69c21030e14851614881db6e68d"},
+		"a": {"salt": "61ba3e9ba93fc41cbc09b49342725cd1", "hashed_password": "9688bdbed4f151292968e9d7c99e4132af81b7486157fe320c33cce318454dc7"}
     }
 
 	while True:
 		global usr_id
 		username = input("Enter your username: ")
 		password = getpass.getpass("Enter your password: ")  # Use getpass to hide the input
+		hashed_password = hash_password(password, valid_users[username]["salt"])
 		clear_terminal()
 
-		if username in valid_users and valid_users[username] == password:
+		if username in valid_users and valid_users[username]["hashed_password"] == hashed_password:
 			usr_id = username
 			print(f"Welcome, {usr_id}!")
 			input("Press Enter to continue.")
