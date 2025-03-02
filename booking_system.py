@@ -296,7 +296,6 @@ def login():
 		global usr_id
 		username = input("Enter your username: ")
 		password = getpass.getpass("Enter your password: ")  # Use getpass to hide the input
-		#hashed_password = hash_password(password, valid_users[username]["salt"])
 		clear_terminal()
 
 		# Check if stored hash = generated hash
