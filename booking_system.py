@@ -83,7 +83,7 @@ class ReservationHandler:
 
 	def update_reservation(self):
 		current_time = datetime.datetime.now()
-		__reservations = list((res for res in self.__reservations if res.end_time > current_time))
+		self.__reservations = list((res for res in self.__reservations if res.end_time > current_time))
 
 	def list_rooms(self):
 		for room in self.__rooms:
