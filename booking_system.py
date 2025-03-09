@@ -90,7 +90,7 @@ class ReservationHandler:
 			print(f"Room ID: {room.room_id}, Room Name: {room.room_name}")
 
 	def list_reservations(self):
-		for reservation in self.reservations:
+		for reservation in self.__reservations:
 			print(f"Reservation ID: {self.__reservation.res_id}, Room ID: {reservation.room.room_id}, "
 		 		  f"User ID: {self.__reservation.usr_id}, Start Time: {reservation.start_time}, End Time: {reservation.end_time}")
 			
