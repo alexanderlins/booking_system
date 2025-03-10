@@ -1,0 +1,26 @@
+{
+    "reservations": [
+        {
+            "room": {
+                "room_id": "R001",
+                "room_name": "Room1",
+                "is_reservable": true
+            },
+            "usr_id": null,
+            "res_id": "1",
+            "start_time": "2025-08-01 08:00",
+            "end_time": "2025-08-01 10:00"
+        },
+        {
+            "room": {
+                "room_id": "R002",
+                "room_name": "Room2",
+                "is_reservable": true
+            },
+            "usr_id": "Alice",
+            "res_id": "02",
+            "start_time": "2025-08-21 08:00",
+            "end_time": "2025-08-21 10:00"
+        }
+    ]
+}

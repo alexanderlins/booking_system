@@ -118,7 +118,7 @@ def create_new_user(name: str, password: str):
     conn.commit()
     conn.close()
 
-def login(name: str, password: str):
+def login(name: str, password: str) -> bool:
     with sqlite3.connect("bookingsystem.db") as conn:
         cursor = conn.cursor()
         # Retrieve the stored hashed password for the given username

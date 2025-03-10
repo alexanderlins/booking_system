@@ -59,7 +59,7 @@ def display_login():
         password = input("Pick a password: ")
 
         db.create_new_user(username, password)
-        db.check_specific_customers(username)
+        return db.login(username, password)
 
 # display main menu in terminal window
 def display_main_menu():
