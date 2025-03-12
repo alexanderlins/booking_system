@@ -34,7 +34,7 @@ class Room:
 		self.room_name = room_name
 		self.is_reservable = is_reservable
 
-	def __repr__(self):
+	def __repr__(self):	# for debugging purposes - prints string of object
 		return f"Room(room_id='{self.room_id}', room_name='{self.room_name}', is_reservable={self.is_reservable})"
 
 
@@ -48,7 +48,7 @@ class ReservationHandler:
 	def add_room(self, room_id, room_name, is_reservable=True):
 		new_room = Room(room_id, room_name, is_reservable)
 		self.__rooms.append(new_room)
-		print(f"Room added: {new_room}")
+		#print(f"Room added: {new_room}")	# print-out of rooms added Uncomment for debug purposes
 		
 	def add_reservation(self, res_id, room_id, usr_id, start_time, end_time):
 		room = next((r for r in self.__rooms if r.room_id == room_id), None)
