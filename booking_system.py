@@ -211,7 +211,8 @@ def handle_option_1(handler):
 			month_day = input("Enter Start Date (MM-DD): ")
 			year = datetime.datetime.now().year
 			start_date = datetime.datetime(year, int(month_day[:2]), int(month_day[3:]))
-			if start_date < datetime.datetime.now():
+			now = datetime.datetime.now()
+			if start_date < now.replace(hour=0, minute=0, second=0, microsecond=0):
 				raise ValueError("Date must be today or a future date.")
 			break
 		except ValueError as e:
