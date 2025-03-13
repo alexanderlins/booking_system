@@ -158,7 +158,7 @@ def display_main_menu():
 	print("X. Exit")
 
 
-# 
+# Main Menu
 def handle_main_menu_selection(selection, handler):
 	if selection == "1":
 		handle_option_1(handler)
@@ -179,6 +179,7 @@ def handle_main_menu_selection(selection, handler):
 		input("Invalid selection. Please try again by pressing Enter")
 
 
+# Make Reservation
 def handle_option_1(handler):
 	clear_terminal()
 	print("Make Reservation")	
@@ -232,16 +233,19 @@ def handle_option_1(handler):
 
 	while True:
 		try:
-			duration_hours = float(input("How many hours do you wish to reserv the room for? "))
+			duration_hours = int(input("How many hours do you wish to reserve the room for? Maximum is 4: "))
+			if not (0 < duration_hours <= 4):
+				raise ValueError("You can only book for a maximum of 4 hours")
 			end_datetime = start_datetime + datetime.timedelta(hours=duration_hours)
 			break
 		except ValueError:
-			print("Invalid format for duration. Please enter a number.")
+			print("Invalid format for duration. Please enter a number between 1 to 4.")
 
 	handler.add_reservation(res_id, room_id, handler.get_user_id(), start_datetime, end_datetime)
 	input("Press Enter to return to the main menu.")
+ 
 
-
+# Display Reservations
 def handle_option_2(handler):
     clear_terminal()
     print("If you want to see ALL rooms, press enter.")
@@ -278,6 +282,7 @@ def handle_option_2(handler):
     input("\nPress Enter to return to the main menu.")
 
 
+# Display 7-day Schedule
 def handle_option_3(handler):
     selected_room = choose_room(handler)
     try:
@@ -295,6 +300,7 @@ def handle_option_3(handler):
     input("\nPress Enter to return to the main menu.")
 
 
+# Search
 def handle_option_4(handler):
     clear_terminal()
     print("Search")
@@ -313,6 +319,7 @@ def handle_option_4(handler):
     input("Press Enter to return to the main menu.")
 
 
+# Remove Reservation
 def handle_option_5(handler):
     clear_terminal()
     print("Remove Reservation")
