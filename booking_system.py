@@ -241,9 +241,28 @@ def handle_option_1(handler):
 		except ValueError:
 			print("Invalid format for duration. Please enter a number between 1 to 4.")
 
+	#test(handler)
+	for reservation in handler.get_reservations():
+		# Skip current room. It's handled in add_reservation
+		if room_id == reservation.room.room_id:
+			continue
+		# Skip other user's reservations
+		if handler.get_user_id() != reservation.usr_id:
+			continue
+
+		# Check for conflicting reservations in other rooms
+		if not (end_datetime <= reservation.start_time or start_datetime >= reservation.end_time):
+			print(f"You have already reserved {reservation.room.room_id} during this time. Please select a different time or remove your other reservation")
+			input("Press Enter to return ")
+			return
+	
 	handler.add_reservation(res_id, room_id, handler.get_user_id(), start_datetime, end_datetime)
 	input("Press Enter to return to the main menu.")
  
+def test(handler):
+    print("lol")
+    
+
 
 # Display Reservations
 def handle_option_2(handler):
