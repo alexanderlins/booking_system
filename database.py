@@ -58,58 +58,6 @@ def initial_setup():
         conn.commit()
         conn.close()
 
-
-# Function to fetch and display all reservations
-def check_bookings():
-    # Use 'with' statement to manage the database connection
-    with sqlite3.connect("bookingsystem.db") as conn:
-        cursor = conn.cursor()
-
-        # Query to fetch reservations with customer and room details
-        cursor.execute('''
-            SELECT 
-                b.booking_id, 
-                c.name AS customer_name, 
-                r.name AS room_name, 
-                b.check_in_date, 
-                b.check_out_date
-            FROM booking b
-            JOIN customer c ON b.customer_id = c.customer_id
-            JOIN room r ON b.room_id = r.room_id
-        ''')
-
-        reservations = cursor.fetchall()  # Fetch all reservations
-
-        # Print the results
-        if reservations:
-            print("Bookings:")
-            for res in reservations:
-                print(f"Booking ID: {res[0]}, Customer: {res[1]}, Room: {res[2]}, Check-in: {res[3]}, Check-out: {res[4]}")
-        else:
-            print("No bookings found.")
-
-def check_customers():
-    with sqlite3.connect("bookingsystem.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT customer_id, name FROM customer')
-        customers = cursor.fetchall()
-        if customers:
-            for person in customers:
-                print(f"Customer ID: {person[0]}, Name: {person[1]}")
-        else:
-            print("No customers found.")
-
-def check_specific_customers(name: str):
-    with sqlite3.connect("bookingsystem.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT customer_id, name FROM customer WHERE name = (?)', (name))
-        customers = cursor.fetchall()
-        if customers:
-            for person in customers:
-                print(f"Customer ID: {person[0]}, Name: {person[1]}")
-        else:
-            print("No customers found.")
-
 def create_new_user(name: str, password: str):
     encrypted_password = hash_password(password)
     conn = sqlite3.connect("bookingsystem.db")
