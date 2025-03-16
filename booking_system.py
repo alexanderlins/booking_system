@@ -630,8 +630,9 @@ def print_reservations_table(handler, room_filter=None):
 
 
 def main():
-
-	handler = ReservationHandler()	
+	
+	handler = ReservationHandler()
+    
 	#
 	# uncomment below calls to add rooms if json-load file is empty
 	handler.add_room("R001", "Room1", True)
@@ -650,4 +651,5 @@ def main():
 
 
 if __name__ == "__main__":
+	db.initial_setup()
 	main()

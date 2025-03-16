@@ -6,3 +6,4 @@ venv
 env
 reservations.json
 schedule.json
+bookingsystem.db

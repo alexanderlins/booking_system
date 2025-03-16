@@ -14,9 +14,11 @@ def initial_setup():
     if my_file.is_file():
         print("Database exists")
     else:
-        print("Creating database...")
-        customer_name = "Alice"
-        customer_password = "securepassword123"
+        with open('bookingsystem.db', 'w') as file:
+            print("Creating database...")
+        
+        customer_name = "admin"
+        customer_password = "admin"
         hashed_password = hash_password(customer_password)
 
         # Connect to (or create) a database
