@@ -489,6 +489,7 @@ def login(handler) -> bool:
 		result = validate_credentials(username, password)
 		if result == True:
 			print(f"Welcome, {username}!")
+			input("Press enter to continue.")
 			handler.set_user_id(username)
 			return True
 		else:
