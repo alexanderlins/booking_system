@@ -477,10 +477,6 @@ def load_reservations_from_json(handler):
         print(f"An error occurred while loading reservations: {e}")
 
 
-def hash_password(pwd, salt):
-    return hashlib.sha256((salt + pwd).encode()).hexdigest()
-
-
 def login(handler) -> bool:
 	print("")
 	print(f"Room Reservation System v{__version__}")
