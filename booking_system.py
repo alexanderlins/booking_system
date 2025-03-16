@@ -34,7 +34,7 @@ class Room:
 		self.room_name = room_name
 		self.is_reservable = is_reservable
 
-	def __repr__(self):
+	def __repr__(self): # for debugging purposes - prints string of object
 		return f"Room(room_id='{self.room_id}', room_name='{self.room_name}', is_reservable={self.is_reservable})"
 
 
@@ -49,6 +49,7 @@ class ReservationHandler:
 		new_room = Room(room_id, room_name, is_reservable)
 		self.__rooms.append(new_room)
 		print(f"Room added: {new_room}")
+		#print(f"Room added: {new_room}")	# print-out of rooms added Uncomment for debug purposes
 		
 	def add_reservation(self, res_id, room_id, usr_id, start_time, end_time):
 		room = next((r for r in self.__rooms if r.room_id == room_id), None)
@@ -64,7 +65,7 @@ class ReservationHandler:
 			self.__reservations.append(tmp_res)
 			print(f"Reservation succesfully made: {tmp_res}")
 		else:
-			print(f"Error: Room is not available or is not present in the system")
+			print(f"Error: {room_id} is not available or is not present in the system")
 
 	def remove_reservation(self, res_id):
 		res = next((r for r in self.__reservations if r.res_id == res_id), None)
@@ -151,13 +152,13 @@ def display_main_menu():
 	print(f"Room Reservation System v{__version__}")
 	print("**|| Main Menu ||**")
 	print("1. Make Reservation")
-	print("2. Print Reservation(s)")
-	print("3. Search")
-	print("4. Remove Reservation")
-	print("5. Exit")
+	print("2. Display Reservations")
+	print("3. Display 7-day Schedule (Terminal-size may break structure.)")
+	print("4. Search")
+	print("5. Remove Reservation")
+	print("X. Exit")
 
-
-# 
+# Main Menu
 def handle_main_menu_selection(selection, handler):
 	if selection == "1":
 		handle_option_1(handler)
@@ -168,6 +169,8 @@ def handle_main_menu_selection(selection, handler):
 	elif selection == "4":
 		handle_option_4(handler)
 	elif selection == "5":
+		handle_option_5(handler)
+	elif selection.lower() == "x":
 		print("Saving session state...")
 		save_reservation_to_json(handler)		
 		print("Exiting the program. Goodbye!")
@@ -175,7 +178,7 @@ def handle_main_menu_selection(selection, handler):
 	else:
 		input("Invalid selection. Please try again by pressing Enter")
 
-
+# Make Reservation
 def handle_option_1(handler):
 	clear_terminal()
 	print("Make Reservation")	
@@ -208,7 +211,8 @@ def handle_option_1(handler):
 			month_day = input("Enter Start Date (MM-DD): ")
 			year = datetime.datetime.now().year
 			start_date = datetime.datetime(year, int(month_day[:2]), int(month_day[3:]))
-			if start_date < datetime.datetime.now():
+			now = datetime.datetime.now()
+			if start_date < now.replace(hour=0, minute=0, second=0, microsecond=0):
 				raise ValueError("Date must be today or a future date.")
 			break
 		except ValueError as e:
@@ -228,65 +232,128 @@ def handle_option_1(handler):
 
 	while True:
 		try:
-			duration_hours = float(input("How many hours do you wish to reserv the room for? "))
+			duration_hours = int(input("How many hours do you wish to reserve the room for? Maximum is 4: "))
+			if not (0 < duration_hours <= 4):
+				raise ValueError("You can only book for a maximum of 4 hours")
 			end_datetime = start_datetime + datetime.timedelta(hours=duration_hours)
 			break
 		except ValueError:
-			print("Invalid format for duration. Please enter a number.")
+			print("Invalid format for duration. Please enter a number between 1 to 4.")
 
+	# Check for conflicting reservations in other rooms by user
+		for reservation in handler.get_reservations():
+			# Skip current room. It's handled in add_reservation
+			if room_id == reservation.room.room_id:
+				continue
+			# Skip other user's reservations
+			if handler.get_user_id() != reservation.usr_id:
+				continue
+
+			# Check for conflicting reservations in other rooms
+			if not (end_datetime <= reservation.start_time or start_datetime >= reservation.end_time):
+				print(f"You have already reserved {reservation.room.room_id} during this time. Please select a different time or remove your other reservation")
+				input("Press Enter to return ")
+				return
+	
 	handler.add_reservation(res_id, room_id, handler.get_user_id(), start_datetime, end_datetime)
 	input("Press Enter to return to the main menu.")
 
-
+# Display Reservations
 def handle_option_2(handler):
-	clear_terminal()
-	print("Print Reservation(s)")
-	print_room_reservations(handler)
-	input("Press Enter to return to the main menu.")
+    clear_terminal()
+    print("If you want to see ALL rooms, press enter.")
+    selected_room = choose_room(handler)
+    try:
+        if selected_room is None: # User gave faulty input.
+            pass
+        elif not selected_room: # User gave empty string input.
+            # Sort the reservations by time first, then by room-ID
+            handler.sort_reservations("end_time")
+            handler.sort_reservations("room_id")
+            
+            list_or_table = input("\nWould you like to see it in a table format? (Press enter for 'Yes', input any character for list format.)\n").lower()
+            clear_terminal()
+            if not list_or_table:
+                print_reservations_table(handler)
+            else:
+                print_reservations_list(handler)
+                print("The above shows all future reservations.")
+        else: # User gave correct input.
+            # Sort the reservations by time.
+            handler.sort_reservations("end_time")
+            
+            list_or_table = input("\nWould you like to see it in a table format? (Press enter for 'Yes', input any character for list format.)\n").lower()
+            clear_terminal()
+            print(f"Below are all the reservations for: {selected_room.room_name} ({selected_room.room_id})")
+            if not list_or_table: #If no input, assume they wanted table.
+                print_reservations_table(handler, selected_room.room_id)
+            else:
+                print_reservations_list(handler, selected_room.room_id)
+                print(f"The above are the reservations for: {selected_room.room_name} ({selected_room.room_id})")
+    except Exception as e:
+        print(f"An error occurred while printing room schedule: {e}")
+    input("\nPress Enter to return to the main menu.")
 
-
+# Display 7-day Schedule
 def handle_option_3(handler):
-	clear_terminal()
-	print("Search")
-	id = input("Enter Reservation ID to search: ")
+    selected_room = choose_room(handler)
+    try:
+        if selected_room: #If there's content, i.e., not None nor empty!
+            print(f"Below is the 7-day schedule for: {selected_room.room_name} ({selected_room.room_id})")
+            print_schedule_table_with_reservations(handler, selected_room.room_id)
+            print("The schedule is split into Early Morning, Morning, Afternoon, and Evening for terminal-formatting purposes.")
+            print(f"Above is the 7-day schedule for: {selected_room.room_name} ({selected_room.room_id})")
+        else:
+            input("The Schedule-viewing functionality is room-specific and limited to 7 days, otherwise it'd be too spammy!\nPlease try again.\n")
 
-	found_res = search_reservation(handler, id)
-	if found_res:
-		print(f"  - Reservation ID: {found_res.res_id}")
-		print(f"  - User ID: {found_res.usr_id}")
-		print(f"  - Room: {found_res.room.room_id}")
-		print(f"  - Start Time: {found_res.start_time}")
-		print(f"  - End Time: {found_res.end_time}")
-	else:
-		print("Reservation not found")
-
-	input("Press Enter to return to the main menu.")
+    except Exception as e:
+        print(f"An error occurred while printing room schedule: {e}")
+    
+    input("\nPress Enter to return to the main menu.")
 
 
+# Search
 def handle_option_4(handler):
-	clear_terminal()
-	print("Remove Reservation")
+    clear_terminal()
+    print("Search")
+    id = input("Enter Reservation ID to search: ")
 
-	if handler.is_reservations_empty():
-		print("No reservations to be removed.")
-		input("Press Enter to return to main menu.")
-		return
-	
-	print("Removable Reservations:")
-	for res in handler.get_reservations():
-		print(f"Reservation ID: {res.res_id}, User ID: {res.usr_id}, Room ID: {res.room.room_id}, Start Time: {res.start_time}, End Time: {res.end_time}")
+    found_res = search_reservation(handler, id)
+    if found_res:
+        print(f"  - Reservation ID: {found_res.res_id}")
+        print(f"  - User ID: {found_res.usr_id}")
+        print(f"  - Room: {found_res.room.room_id}")
+        print(f"  - Start Time: {found_res.start_time}")
+        print(f"  - End Time: {found_res.end_time}")
+    else:
+        print("Reservation not found")
 
-	cnf = input("Do you want to proceed removing a reservation?(y/n): ")
-	if cnf.lower() != 'y':
-		print("Aborting removal process. Returning to the main menu.")
-		input("Press Enter to return to the main menu.")
-		return
+    input("Press Enter to return to the main menu.")
 
-	remove_id = input("Enter Reservation ID to be removed: ")
+# Remove Reservation
+def handle_option_5(handler):
+    clear_terminal()
+    print("Remove Reservation")
 
-	handler.remove_reservation(remove_id)
-	input("Press Enter to return to the main menu.")
+    if handler.is_reservations_empty():
+        print("No reservations to be removed.")
+        input("Press Enter to return to main menu.")
+        return
+    
+    print("Removable Reservations:")
+    for res in handler.get_reservations():
+        print(f"Reservation ID: {res.res_id}, User ID: {res.usr_id}, Room ID: {res.room.room_id}, Start Time: {res.start_time}, End Time: {res.end_time}")
 
+    cnf = input("Do you want to proceed removing a reservation?(y/n): ")
+    if cnf.lower() != 'y':
+        print("Aborting removal process. Returning to the main menu.")
+        input("Press Enter to return to the main menu.")
+        return
+
+    remove_id = input("Enter Reservation ID to be removed: ")
+
+    handler.remove_reservation(remove_id)
+    input("Press Enter to return to the main menu.")
 
 def search_reservation(handler, id):
 	handler.sort_reservations("res_id")
@@ -302,87 +369,115 @@ def search_reservation(handler, id):
 			right = mid - 1
 	return None
 
+def choose_room(handler):
+    # List all rooms
+    handler.list_rooms()
+    
+    # Ask the user which room schedule they want to see
+    room_filter = input("Which room would you like to see?\n").lower()
+    
+    if not room_filter:
+        # Just pressing enter could've been by mistake, but let's treat it like a choice! >:D)-<
+        return "" 
 
-def print_room_reservations(handler, room_filter=None):
-	# Ensure there are reservations in the global list
-	if handler.is_reservations_empty():
-		print("No reservations found.")
-		return
+    # Check for matching rooms
+    for selected_room in handler.get_rooms():
+        if (selected_room.room_id.lower() == room_filter) or \
+           (selected_room.room_name.lower() == room_filter):
+            return selected_room # If user has selected a valid room, return the room.         
 
-	if room_filter:
-		print(f"\n=== {room_filter}'s Reservations List ===\n")
-	else:
-		print("\n=== Entire Reservations List ===\n")
+    # Handle case where no match is found
+    print("No matching room found. Please check the room ID or name and try again.")
+    return None
 
-	found = False
 
-	# Loop through and print each reservation
-	for i, reservation in enumerate(handler.get_reservations(), start=1):
-		if room_filter is None or reservation.room.room_id == room_filter:
-			found = True
-			print(f"Reservation {i}:")
-			# Ensure the room object is valid
-			if isinstance(reservation.room, Room):
-				print(f"  - Room Name: {reservation.room.room_name} (ID: {reservation.room.room_id})")
-			else:
-				print("  - Room: N/A (Invalid Room Data)")
-			print(f"  - Reservation ID: {reservation.res_id}") # Not shown? Private key variable for removing reservation?
-			print(f"  - User ID: {reservation.usr_id}")
-			print(f"  - Start Time: {reservation.start_time}")
-			print(f"  - End Time: {reservation.end_time}")
-			print("-" * 40)  # Separator line
 
-	if not found:
-		print("No reservations match the given filter.")
-	else:
-		print("\n=== Reservations List End ===\n")
+def print_reservations_list(handler, room_filter=None):
+    # Ensure there are reservations in the list
+    if handler.is_reservations_empty():
+        print("No reservations found.")
+        return
+
+    if room_filter:
+        print(f"\n=== {room_filter}'s Reservations List ===\n")
+    else:
+        print("\n=== Entire Reservations List ===\n")
+
+    found = False
+
+    # Loop through and print each reservation
+    for i, reservation in enumerate(handler.get_reservations(), start=1):
+        if room_filter is None or reservation.room.room_id == room_filter:
+            found = True
+            print(f"Reservation {i}:")
+            # Ensure the room object is valid
+            if isinstance(reservation.room, Room):
+                print(f"  - Room Name: {reservation.room.room_name} (ID: {reservation.room.room_id})")
+            else:
+                print("  - Room: N/A (Invalid Room Data)")
+            print(f"  - Reservation ID: {reservation.res_id}")
+            print(f"  - User ID: {reservation.usr_id}")
+            print(f"  - Start Time: {reservation.start_time}")
+            print(f"  - End Time: {reservation.end_time}")
+            print("-" * 40)  # Separator line
+
+    if not found:
+        print("No reservations match the given filter.")
+    else:
+        print("\n=== Reservations List End ===\n")
 
 
 def save_reservation_to_json(handler):
-	#Saves by overwriting the old file.
-	try:
-		# Serialize the reservations list
-		reservations_data = [
-			{
-				"room": {
-					"room_id": res.room.room_id,
-					"room_name": res.room.room_name,
-					"is_reservable": res.room.is_reservable
-				},
-				"usr_id": res.usr_id,
-				"res_id": res.res_id,
-				"start_time": res.start_time.strftime('%Y-%m-%d %H:%M'),
-				"end_time": res.end_time.strftime('%Y-%m-%d %H:%M')
-			} for res in handler.get_reservations()
-		]
-		# Write to file
-		with open(reservation_file_path, "w") as file:
-			json.dump({"reservations": reservations_data}, file, indent=4)
-		print("Reservations saved successfully.")
-	except Exception as e:
-		print(f"An error occurred while saving reservations: {e}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    reservation_file_path = os.path.join(script_dir, 'reservations.json')
+    
+    #Saves by overwriting the old file.
+    try:
+        # Serialize the reservations list
+        reservations_data = [
+            {
+                "room": {
+                    "room_id": res.room.room_id,
+                    "room_name": res.room.room_name,
+                    "is_reservable": res.room.is_reservable
+                },
+                "usr_id": res.usr_id,
+                "res_id": res.res_id,
+                "start_time": res.start_time.strftime('%Y-%m-%d %H:%M'),
+                "end_time": res.end_time.strftime('%Y-%m-%d %H:%M')
+            } for res in handler.get_reservations()
+        ]
+        # Write to file
+        with open(reservation_file_path, "w") as file:
+            json.dump({"reservations": reservations_data}, file, indent=4)
+        print("Reservations saved successfully.")
+    except Exception as e:
+        print(f"An error occurred while saving reservations: {e}")
 
 
 def load_reservations_from_json(handler):
-	# Load reservations from json file.
-	if not os.path.exists(reservation_file_path) or os.path.getsize(reservation_file_path) == 0:
-		return #Return if the file doesn't exist or is empty.
-	try:
-		with open(reservation_file_path, "r") as file:
-			data = json.load(file)
-		
-		for res in data["reservations"]:
-			# Recreate the Room object
-			if not handler.is_room_present(res["room"]["room_id"]):
-				handler.add_room(res["room"]["room_id"], res["room"]["room_name"])
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    reservation_file_path = os.path.join(script_dir, 'reservations.json')
+    
+    # Load reservations from json file.
+    if not os.path.exists(reservation_file_path) or os.path.getsize(reservation_file_path) == 0:
+        return #Return if the file doesn't exist or is empty.
+    try:
+        with open(reservation_file_path, "r") as file:
+            data = json.load(file)
+        
+        for res in data["reservations"]:
+            # Recreate the Room object
+            if not handler.is_room_present(res["room"]["room_id"]):
+                handler.add_room(res["room"]["room_id"], res["room"]["room_name"])
 
-			start_time = datetime.datetime.strptime(res["start_time"], '%Y-%m-%d %H:%M')
-			end_time = datetime.datetime.strptime(res["end_time"], '%Y-%m-%d %H:%M')
-			if end_time >= datetime.datetime.now():
-				handler.add_reservation(res["res_id"], res["room"]["room_id"], res["usr_id"], start_time, end_time)
+            start_time = datetime.datetime.strptime(res["start_time"], '%Y-%m-%d %H:%M')
+            end_time = datetime.datetime.strptime(res["end_time"], '%Y-%m-%d %H:%M')
+            if end_time.date() >= datetime.datetime.now().date(): ### NEW! Edited to only care about today's date and not time.
+                handler.add_reservation(res["res_id"], res["room"]["room_id"], res["usr_id"], start_time, end_time)
 
-	except Exception as e:
-		print(f"An error occurred while loading reservations: {e}")
+    except Exception as e:
+        print(f"An error occurred while loading reservations: {e}")
 
 
 def hash_password(pwd, salt):
@@ -416,6 +511,121 @@ def login(handler):
 
 	else:
 		print("Invalid selection.")
+
+def print_schedule_table_with_reservations(handler, room_filter):
+    # Function prints the schedule of the next 7 days starting from the current day.
+
+    # Get today's date
+    today = datetime.datetime.today()
+
+    # Generate a list of the next 7 dates
+    next_7_days = [(today + datetime.timedelta(days=i)) for i in range(7)]
+
+    # List times of day in order
+    time_of_day = ["Early Morning", "Morning", "Afternoon", "Evening"]
+
+    # Process reservations to map reservations by date and hour
+    reservation_map = {day.strftime("%d-%m-%Y, %A"): [" "] * 24 for day in next_7_days}  # Initialize all slots, replace [" "] if you want the boxes free to say something.
+    for reservation in handler.get_reservations():
+        if reservation.room.room_id == room_filter:
+            # Calculate all days covered by the reservation
+            current_time = reservation.start_time
+            while current_time <= reservation.end_time:
+                reservation_day = current_time.strftime("%d-%m-%Y, %A")
+                if reservation_day in reservation_map:  # Only process if the reservation is within these 7 days
+                    start_hour = max(reservation.start_time.hour, current_time.hour) if current_time.date() == reservation.start_time.date() else 0
+                    end_hour = min(reservation.end_time.hour, 23) if current_time.date() == reservation.end_time.date() else 23
+                    for hour in range(start_hour, end_hour):
+                        # Mark as reserved with user and reservation details
+                        reservation_map[reservation_day][hour] = reservation.usr_id + " (ID: " + reservation.res_id + ")"
+                # Move to the next day
+                current_time = (current_time + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Generate and print tables for 4 chunks (24 hours total)
+    for chunk in range(4):  # 4 chunks (6 hours each)
+        current_time_word = time_of_day[chunk]
+
+        # Define headers
+        headers = [current_time_word] + [
+            f"{(datetime.datetime.strptime('00:00', '%H:%M') + datetime.timedelta(hours=i + chunk * 6)).strftime('%H:%M')}"
+            for i in range(6)
+        ]
+
+        # Fixed column widths
+        fixed_col_widths = [25] + [12] * 6
+
+        def wrap_text(text, width):
+            """Wraps text into multiple lines to fit column width."""
+            return textwrap.fill(str(text), width=width)
+
+        # Print headers
+        print("~" * (sum(fixed_col_widths) + len(fixed_col_widths) * 3 + 1))  # Top border
+        print("| " + " | ".join(f"{headers[i]:<{fixed_col_widths[i]}}" for i in range(len(headers))) + " |")
+        print("~" * (sum(fixed_col_widths) + len(fixed_col_widths) * 3 + 1))  # Header separator
+
+        # Generate rows with wrapped text
+        rows = [[day] + [
+            reservation_map[day][i + chunk * 6]
+            for i in range(6)
+        ] for day in reservation_map.keys()]
+
+        for row in rows:
+            wrapped_cells = [wrap_text(str(cell), fixed_col_widths[i]) for i, cell in enumerate(row)]
+            # Split wrapped text into lines
+            max_lines = max(cell.count("\n") + 1 for cell in wrapped_cells)
+            for line_num in range(max_lines):
+                print("| " + " | ".join(
+                    wrapped_cells[i].split("\n")[line_num].ljust(fixed_col_widths[i])
+                    if line_num < len(wrapped_cells[i].split("\n")) else " " * fixed_col_widths[i]
+                    for i in range(len(wrapped_cells))
+                ) + " |")
+            print("-" * (sum(fixed_col_widths) + len(fixed_col_widths) * 3 + 1)) # bottom row border
+        # Put bottom border here if you remove bottom row borders, otherwise it'd look odd.
+
+
+def print_reservations_table(handler, room_filter=None):
+    if handler.is_reservations_empty():
+        print("No reservations found.")
+        return
+
+    if room_filter:
+        print(f"\n=== {room_filter}'s Reservations List ===\n")
+    else:
+        print("\n=== Entire Reservations List ===\n")
+
+    found = False
+    
+    # Define table headers and rows
+    headers = ["Room ID", "Room Name", "User ID", "Reservation ID", "Start Time", "End Time"]
+    rows = []
+ 
+    # Add reservations to rows
+    for reservation in handler.get_reservations():
+        if room_filter is None or reservation.room.room_id == room_filter:
+            found = True
+            rows += [[
+                reservation.room.room_id,
+                reservation.room.room_name,
+                reservation.usr_id,
+                reservation.res_id,
+                reservation.start_time.strftime("%Y-%m-%d %H:%M"),
+                reservation.end_time.strftime("%Y-%m-%d %H:%M")
+            ]]
+
+    # Calculate column widths
+    col_widths = [max(len(str(item)) for item in col) for col in zip(headers, *rows)]
+
+    # Print the table
+    print("-" * (sum(col_widths) + len(col_widths) * 3 + 1))  # Top border
+    print("| " + " | ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers))) + " |")
+    print("-" * (sum(col_widths) + len(col_widths) * 3 + 1))  # Header separator
+    for row in rows:
+        print("| " + " | ".join(f"{row[i]:<{col_widths[i]}}" for i in range(len(row))) + " |")
+    print("-" * (sum(col_widths) + len(col_widths) * 3 + 1))  # Bottom border
+ 
+    if not found:
+        print("No reservations match the given filter.")
+		
 
 
 def main():
