@@ -4,10 +4,15 @@ import getpass
 import hashlib
 import json
 import datetime
+import database as db
 import textwrap
 
 __version__ = '1.2'
 __desc__ = "A simple implementation of a room-booking system with basic functionality"
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+schedule_file_path = os.path.join(script_dir, 'schedule.json')
+reservation_file_path = os.path.join(script_dir, 'reservations.json')
 
 
 class Reservation:
@@ -30,7 +35,7 @@ class Room:
 		self.room_name = room_name
 		self.is_reservable = is_reservable
 
-	def __repr__(self):	# for debugging purposes - prints string of object
+	def __repr__(self): # for debugging purposes - prints string of object
 		return f"Room(room_id='{self.room_id}', room_name='{self.room_name}', is_reservable={self.is_reservable})"
 
 
@@ -44,6 +49,7 @@ class ReservationHandler:
 	def add_room(self, room_id, room_name, is_reservable=True):
 		new_room = Room(room_id, room_name, is_reservable)
 		self.__rooms.append(new_room)
+		print(f"Room added: {new_room}")
 		#print(f"Room added: {new_room}")	# print-out of rooms added Uncomment for debug purposes
 		
 	def add_reservation(self, res_id, room_id, usr_id, start_time, end_time):
@@ -153,7 +159,6 @@ def display_main_menu():
 	print("5. Remove Reservation")
 	print("X. Exit")
 
-
 # Main Menu
 def handle_main_menu_selection(selection, handler):
 	if selection == "1":
@@ -173,7 +178,6 @@ def handle_main_menu_selection(selection, handler):
 		exit()
 	else:
 		input("Invalid selection. Please try again by pressing Enter")
-
 
 # Make Reservation
 def handle_option_1(handler):
@@ -238,23 +242,22 @@ def handle_option_1(handler):
 			print("Invalid format for duration. Please enter a number between 1 to 4.")
 
 	# Check for conflicting reservations in other rooms by user
-	for reservation in handler.get_reservations():
-		# Skip current room. It's handled in add_reservation
-		if room_id == reservation.room.room_id:
-			continue
-		# Skip other user's reservations
-		if handler.get_user_id() != reservation.usr_id:
-			continue
+		for reservation in handler.get_reservations():
+			# Skip current room. It's handled in add_reservation
+			if room_id == reservation.room.room_id:
+				continue
+			# Skip other user's reservations
+			if handler.get_user_id() != reservation.usr_id:
+				continue
 
-		# Check for conflicting reservations in other rooms
-		if not (end_datetime <= reservation.start_time or start_datetime >= reservation.end_time):
-			print(f"You have already reserved {reservation.room.room_id} during this time. Please select a different time or remove your other reservation")
-			input("Press Enter to return ")
-			return
+			# Check for conflicting reservations in other rooms
+			if not (end_datetime <= reservation.start_time or start_datetime >= reservation.end_time):
+				print(f"You have already reserved {reservation.room.room_id} during this time. Please select a different time or remove your other reservation")
+				input("Press Enter to return ")
+				return
 	
 	handler.add_reservation(res_id, room_id, handler.get_user_id(), start_datetime, end_datetime)
 	input("Press Enter to return to the main menu.")
-
 
 # Display Reservations
 def handle_option_2(handler):
@@ -292,7 +295,6 @@ def handle_option_2(handler):
         print(f"An error occurred while printing room schedule: {e}")
     input("\nPress Enter to return to the main menu.")
 
-
 # Display 7-day Schedule
 def handle_option_3(handler):
     selected_room = choose_room(handler)
@@ -329,7 +331,6 @@ def handle_option_4(handler):
 
     input("Press Enter to return to the main menu.")
 
-
 # Remove Reservation
 def handle_option_5(handler):
     clear_terminal()
@@ -355,6 +356,19 @@ def handle_option_5(handler):
     handler.remove_reservation(remove_id)
     input("Press Enter to return to the main menu.")
 
+def search_reservation(handler, id):
+	handler.sort_reservations("res_id")
+	left, right = 0, len(handler.get_reservations()) - 1
+
+	while left <= right:
+		mid = (left + right) // 2
+		if handler.get_reservations()[mid].res_id == id:
+			return handler.get_reservations()[mid]
+		elif handler.get_reservations()[mid].res_id < id:
+			left = mid + 1
+		else:
+			right = mid - 1
+	return None
 
 def choose_room(handler):
     # List all rooms
@@ -377,20 +391,6 @@ def choose_room(handler):
     print("No matching room found. Please check the room ID or name and try again.")
     return None
 
-
-def search_reservation(handler, id):
-	handler.sort_reservations("res_id")
-	left, right = 0, len(handler.get_reservations()) - 1
-
-	while left <= right:
-		mid = (left + right) // 2
-		if handler.get_reservations()[mid].res_id == id:
-			return handler.get_reservations()[mid]
-		elif handler.get_reservations()[mid].res_id < id:
-			left = mid + 1
-		else:
-			right = mid - 1
-	return None
 
 
 def print_reservations_list(handler, room_filter=None):
@@ -486,28 +486,32 @@ def hash_password(pwd, salt):
 
 
 def login(handler):
-	valid_users = {
-		"anwa2301": {"salt": "bc998cdbf30b03db581244bf75394dec", "hashed_password": "d72cc55563ba330722af5d880386b7c77336191d7b6b72689da0c9cf58693e32"},
-		"frst1301": {"salt": "596360727e1c668231c4fc73791bf7a3", "hashed_password": "942e704242a0c283363459fc13d9e34ad7e8c257ea1eb18ee8c217311782f3f9"},
-		"igli2400": {"salt": "c53bc1d98d5bdb7adf52ca1db4790995", "hashed_password": "03dfef70dc27636d8866ae0a49f7347a7ecc30eeeeb439b0c00b86965ceb5ebc"},
-		"anov2400": {"salt": "d1ce2657667364d4947c27a45ebfa479", "hashed_password": "4ff4a209abcf96dc7966fc710b237393e760c69c21030e14851614881db6e68d"},
-		"a": {"salt": "61ba3e9ba93fc41cbc09b49342725cd1", "hashed_password": "9688bdbed4f151292968e9d7c99e4132af81b7486157fe320c33cce318454dc7"}
-    }
+	print("")
+	print(f"Room Reservation System v{__version__}")
+	print("1. Login")
+	print("2. Create new user")
+	selection = input("Please enter your selection: ")
 
-	while True:
-		username = input("Enter your username: ")
-		password = getpass.getpass("Enter your password: ")  # Use getpass to hide the input
-		clear_terminal()
-
-		# Check if stored hash = generated hash
-		if username in valid_users and valid_users[username]["hashed_password"] == hash_password(password, valid_users[username]["salt"]):
-			handler.set_user_id(username)
+	if selection == "1":
+		username = input("Enter username: ")
+		password = getpass.getpass("Enter password: ")
+		if db.login(username, password):
 			print(f"Welcome, {username}!")
-			input("Press Enter to continue.")
-			break
+			handler.set_user_id(username)
 		else:
-			print("Invalid username or password. Please try again.")
+			print("Invalid credentials.")
 
+	elif selection == "2":
+		username = input("Choose username: ")
+		handler.set_user_id(username)
+		password = getpass.getpass("Choose password: ")
+		if db.create_new_user(username, password):
+			print("User created successfully.")
+		else:
+			print("User creation failed.")
+
+	else:
+		print("Invalid selection.")
 
 def print_schedule_table_with_reservations(handler, room_filter):
     # Function prints the schedule of the next 7 days starting from the current day.
@@ -623,6 +627,7 @@ def print_reservations_table(handler, room_filter=None):
     if not found:
         print("No reservations match the given filter.")
 		
+
 
 def main():
 
