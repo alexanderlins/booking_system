@@ -485,7 +485,7 @@ def hash_password(pwd, salt):
     return hashlib.sha256((salt + pwd).encode()).hexdigest()
 
 
-def login(handler):
+def login(handler) -> bool:
 	print("")
 	print(f"Room Reservation System v{__version__}")
 	print("1. Login")
@@ -495,11 +495,14 @@ def login(handler):
 	if selection == "1":
 		username = input("Enter username: ")
 		password = getpass.getpass("Enter password: ")
-		if db.login(username, password):
+		result = validate_credentials(username, password)
+		if result == True:
 			print(f"Welcome, {username}!")
 			handler.set_user_id(username)
+			return True
 		else:
 			print("Invalid credentials.")
+			return False
 
 	elif selection == "2":
 		username = input("Choose username: ")
@@ -507,11 +510,20 @@ def login(handler):
 		password = getpass.getpass("Choose password: ")
 		if db.create_new_user(username, password):
 			print("User created successfully.")
+			return True
 		else:
 			print("User creation failed.")
+			return False
 
 	else:
 		print("Invalid selection.")
+		return False
+		
+def validate_credentials(username, password) -> bool:
+	result = db.login(username, password)
+	return result
+	
+	
 
 def print_schedule_table_with_reservations(handler, room_filter):
     # Function prints the schedule of the next 7 days starting from the current day.
@@ -630,7 +642,6 @@ def print_reservations_table(handler, room_filter=None):
 
 
 def main():
-	
 	handler = ReservationHandler()
     
 	#
@@ -640,14 +651,15 @@ def main():
 	handler.add_room("R003", "Room3", True)
 	handler.add_room("R004", "Room4", True)
 	handler.add_room("S006", "Storage6", True)
-
-	login(handler)
+	
+	result = login(handler)
 	load_reservations_from_json(handler)
-	while True:
+	while result:
 		handler.update_reservation()
 		display_main_menu()
 		selection = input("Please enter your selection: ")
 		handle_main_menu_selection(selection, handler)
+		
 
 
 if __name__ == "__main__":
