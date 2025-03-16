@@ -5,6 +5,7 @@ import hashlib
 import json
 import datetime
 import database as db
+import textwrap
 
 __version__ = '1.2'
 __desc__ = "A simple implementation of a room-booking system with basic functionality"
