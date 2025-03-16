@@ -10,10 +10,6 @@ import textwrap
 __version__ = '1.2'
 __desc__ = "A simple implementation of a room-booking system with basic functionality"
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-schedule_file_path = os.path.join(script_dir, 'schedule.json')
-reservation_file_path = os.path.join(script_dir, 'reservations.json')
-
 
 class Reservation:
 	def __init__(self, room, usr_id, res_id, start_time, end_time, index):
@@ -511,6 +507,7 @@ def login(handler) -> bool:
 		added = db.create_new_user(username, password)
 		if added == True:
 			print("User created successfully.")
+			input("Press enter to continue.")
 			return True
 		else:
 			print("User creation failed.")
