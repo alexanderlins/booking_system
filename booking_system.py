@@ -1,7 +1,6 @@
 import os
 import platform
 import getpass
-import hashlib
 import json
 import datetime
 import database as db
@@ -541,7 +540,7 @@ def print_schedule_table_with_reservations(handler, room_filter):
                 reservation_day = current_time.strftime("%d-%m-%Y, %A")
                 if reservation_day in reservation_map:  # Only process if the reservation is within these 7 days
                     start_hour = max(reservation.start_time.hour, current_time.hour) if current_time.date() == reservation.start_time.date() else 0
-                    end_hour = min(reservation.end_time.hour, 23) if current_time.date() == reservation.end_time.date() else 23
+                    end_hour = min(reservation.end_time.hour, 23) if current_time.date() == reservation.end_time.date() else 24
                     for hour in range(start_hour, end_hour):
                         # Mark as reserved with user and reservation details
                         reservation_map[reservation_day][hour] = reservation.usr_id + " (ID: " + reservation.res_id + ")"
@@ -654,7 +653,6 @@ def main():
 		selection = input("Please enter your selection: ")
 		handle_main_menu_selection(selection, handler)
 		
-
 
 if __name__ == "__main__":
 	db.initial_setup()
