@@ -60,13 +60,27 @@ def initial_setup():
         conn.commit()
         conn.close()
 
-def create_new_user(name: str, password: str):
+def create_new_user(name: str, password: str) -> bool:
     encrypted_password = hash_password(password)
     conn = sqlite3.connect("bookingsystem.db")
     cursor = conn.cursor()
+    
+    # Insert the new user
     cursor.execute("INSERT INTO customer (name, password) VALUES (?, ?)", (name, encrypted_password))
     conn.commit()
+    
+    # Query to check if the user was added
+    cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
+    result = cursor.fetchone()  # Call the method
+    
     conn.close()
+    
+    # Check if a result was returned and that the name matches
+    if result is not None and result[0] == name:
+        print("User added")
+        return True
+    else:
+        return False
 
 def login(name: str, password: str) -> bool:
     with sqlite3.connect("bookingsystem.db") as conn:

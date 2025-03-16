@@ -508,7 +508,8 @@ def login(handler) -> bool:
 		username = input("Choose username: ")
 		handler.set_user_id(username)
 		password = getpass.getpass("Choose password: ")
-		if db.create_new_user(username, password):
+		added = db.create_new_user(username, password)
+		if added == True:
 			print("User created successfully.")
 			return True
 		else:
