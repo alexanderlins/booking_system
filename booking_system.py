@@ -9,10 +9,6 @@ import textwrap
 __version__ = '1.2'
 __desc__ = "A simple implementation of a room-booking system with basic functionality"
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-schedule_file_path = os.path.join(script_dir, 'schedule.json')
-reservation_file_path = os.path.join(script_dir, 'reservations.json')
-
 
 class Reservation:
 	def __init__(self, room, usr_id, res_id, start_time, end_time, index):
@@ -154,7 +150,7 @@ def display_main_menu():
 	print("2. Display Reservations")
 	print("3. Display 7-day Schedule (Terminal-size may break structure.)")
 	print("4. Search")
-	print("4. Remove Reservation")
+	print("5. Remove Reservation")
 	print("X. Exit")
 
 
@@ -241,7 +237,7 @@ def handle_option_1(handler):
 		except ValueError:
 			print("Invalid format for duration. Please enter a number between 1 to 4.")
 
-	#test(handler)
+	# Check for conflicting reservations in other rooms by user
 	for reservation in handler.get_reservations():
 		# Skip current room. It's handled in add_reservation
 		if room_id == reservation.room.room_id:
@@ -258,10 +254,6 @@ def handle_option_1(handler):
 	
 	handler.add_reservation(res_id, room_id, handler.get_user_id(), start_datetime, end_datetime)
 	input("Press Enter to return to the main menu.")
- 
-def test(handler):
-    print("lol")
-    
 
 
 # Display Reservations
@@ -437,50 +429,56 @@ def print_reservations_list(handler, room_filter=None):
 
 
 def save_reservation_to_json(handler):
-	#Saves by overwriting the old file.
-	try:
-		# Serialize the reservations list
-		reservations_data = [
-			{
-				"room": {
-					"room_id": res.room.room_id,
-					"room_name": res.room.room_name,
-					"is_reservable": res.room.is_reservable
-				},
-				"usr_id": res.usr_id,
-				"res_id": res.res_id,
-				"start_time": res.start_time.strftime('%Y-%m-%d %H:%M'),
-				"end_time": res.end_time.strftime('%Y-%m-%d %H:%M')
-			} for res in handler.get_reservations()
-		]
-		# Write to file
-		with open(reservation_file_path, "w") as file:
-			json.dump({"reservations": reservations_data}, file, indent=4)
-		print("Reservations saved successfully.")
-	except Exception as e:
-		print(f"An error occurred while saving reservations: {e}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    reservation_file_path = os.path.join(script_dir, 'reservations.json')
+    
+    #Saves by overwriting the old file.
+    try:
+        # Serialize the reservations list
+        reservations_data = [
+            {
+                "room": {
+                    "room_id": res.room.room_id,
+                    "room_name": res.room.room_name,
+                    "is_reservable": res.room.is_reservable
+                },
+                "usr_id": res.usr_id,
+                "res_id": res.res_id,
+                "start_time": res.start_time.strftime('%Y-%m-%d %H:%M'),
+                "end_time": res.end_time.strftime('%Y-%m-%d %H:%M')
+            } for res in handler.get_reservations()
+        ]
+        # Write to file
+        with open(reservation_file_path, "w") as file:
+            json.dump({"reservations": reservations_data}, file, indent=4)
+        print("Reservations saved successfully.")
+    except Exception as e:
+        print(f"An error occurred while saving reservations: {e}")
 
 
 def load_reservations_from_json(handler):
-	# Load reservations from json file.
-	if not os.path.exists(reservation_file_path) or os.path.getsize(reservation_file_path) == 0:
-		return #Return if the file doesn't exist or is empty.
-	try:
-		with open(reservation_file_path, "r") as file:
-			data = json.load(file)
-		
-		for res in data["reservations"]:
-			# Recreate the Room object
-			if not handler.is_room_present(res["room"]["room_id"]):
-				handler.add_room(res["room"]["room_id"], res["room"]["room_name"])
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    reservation_file_path = os.path.join(script_dir, 'reservations.json')
+    
+    # Load reservations from json file.
+    if not os.path.exists(reservation_file_path) or os.path.getsize(reservation_file_path) == 0:
+        return #Return if the file doesn't exist or is empty.
+    try:
+        with open(reservation_file_path, "r") as file:
+            data = json.load(file)
+        
+        for res in data["reservations"]:
+            # Recreate the Room object
+            if not handler.is_room_present(res["room"]["room_id"]):
+                handler.add_room(res["room"]["room_id"], res["room"]["room_name"])
 
-			start_time = datetime.datetime.strptime(res["start_time"], '%Y-%m-%d %H:%M')
-			end_time = datetime.datetime.strptime(res["end_time"], '%Y-%m-%d %H:%M')
-			if end_time.date() >= datetime.datetime.now().date():
-				handler.add_reservation(res["res_id"], res["room"]["room_id"], res["usr_id"], start_time, end_time)
+            start_time = datetime.datetime.strptime(res["start_time"], '%Y-%m-%d %H:%M')
+            end_time = datetime.datetime.strptime(res["end_time"], '%Y-%m-%d %H:%M')
+            if end_time.date() >= datetime.datetime.now().date(): ### NEW! Edited to only care about today's date and not time.
+                handler.add_reservation(res["res_id"], res["room"]["room_id"], res["usr_id"], start_time, end_time)
 
-	except Exception as e:
-		print(f"An error occurred while loading reservations: {e}")
+    except Exception as e:
+        print(f"An error occurred while loading reservations: {e}")
 
 
 def hash_password(pwd, salt):
@@ -513,8 +511,6 @@ def login(handler):
 
 def print_schedule_table_with_reservations(handler, room_filter):
     # Function prints the schedule of the next 7 days starting from the current day.
-
-    import datetime
 
     # Get today's date
     today = datetime.datetime.today()
