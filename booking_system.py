@@ -493,7 +493,9 @@ def login(handler) -> bool:
 			handler.set_user_id(username)
 			return True
 		else:
-			print("Invalid credentials.")
+			print("Invalid credentials" )
+			input("Press enter to try again.")
+			clear_terminal()
 			return False
 
 	elif selection == "2":
@@ -507,10 +509,14 @@ def login(handler) -> bool:
 			return True
 		else:
 			print("User creation failed.")
+			input("Press enter to go back and try again.")
+			clear_terminal()
 			return False
 
 	else:
 		print("Invalid selection.")
+		input("Press enter to go back and try again.")
+		clear_terminal()
 		return False
 		
 def validate_credentials(username, password) -> bool:
@@ -645,9 +651,10 @@ def main():
 	handler.add_room("R003", "Room3", True)
 	handler.add_room("R004", "Room4", True)
 	handler.add_room("S006", "Storage6", True)
-	
-	result = login(handler)
-	load_reservations_from_json(handler)
+	result = False
+	while not result:
+		result = login(handler)
+		load_reservations_from_json(handler)
 	while result:
 		handler.update_reservation()
 		display_main_menu()
