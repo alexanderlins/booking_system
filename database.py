@@ -73,7 +73,7 @@ def create_new_user(name: str, password: str) -> bool:
         if "UNIQUE constraint failed" in str(e):
             print("This username is already taken. Please choose a different one.")
         elif "CHECK constraint failed" in str(e):
-            print("User not created. Make sure to write more than 3 characters.")
+            print("User not created. Username has to be at least 3 characters.")
         return False
         
     # Query to check if the user was added
