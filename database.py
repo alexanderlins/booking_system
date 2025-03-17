@@ -64,16 +64,18 @@ def create_new_user(name: str, password: str) -> bool:
     encrypted_password = hash_password(password)
     conn = sqlite3.connect("bookingsystem.db")
     cursor = conn.cursor()
-    
+        
     # Insert the new user
     try:
-       
         cursor.execute("INSERT INTO customer (name, password) VALUES (?, ?)", (name, encrypted_password))
         conn.commit()
-    except:
-        print("User not created. Make sure user is unique and that you write more than 3 characters.")
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE constraint failed" in str(e):
+            print("This username is already taken. Please choose a different one.")
+        elif "CHECK constraint failed" in str(e):
+            print("User not created. Make sure to write more than 3 characters.")
         return False
-    
+        
     # Query to check if the user was added
     cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
     result = cursor.fetchone()  # Call the method
