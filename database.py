@@ -37,8 +37,8 @@ def initial_setup():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS customer (
                 customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name VARCHAR(50) NOT NULL,
-                password TEXT NOT NULL   
+                name VARCHAR(50) NOT NULL CHECK (LENGTH(name) >= 3),
+                password TEXT NOT NULL  
             )
         ''')
 
@@ -66,8 +66,12 @@ def create_new_user(name: str, password: str) -> bool:
     cursor = conn.cursor()
     
     # Insert the new user
-    cursor.execute("INSERT INTO customer (name, password) VALUES (?, ?)", (name, encrypted_password))
-    conn.commit()
+    try:
+        cursor.execute("INSERT INTO customer (name, password) VALUES (?, ?)", (name, encrypted_password))
+        conn.commit()
+    except:
+        print("User not created. Make sure to write more than 3 characters.")
+        return False
     
     # Query to check if the user was added
     cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
