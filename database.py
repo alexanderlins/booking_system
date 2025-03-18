@@ -75,6 +75,9 @@ def create_new_user(name: str, password: str) -> bool:
         elif "CHECK constraint failed" in str(e):
             print("User not created. Username has to be at least 3 characters.")
         return False
+    except:
+        print("Unknown error")
+        return False
         
     # Query to check if the user was added
     cursor.execute("SELECT name FROM customer WHERE name = ?", (name,))
