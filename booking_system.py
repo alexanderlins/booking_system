@@ -500,12 +500,12 @@ def login(handler) -> bool:
 
 	elif selection == "2":
 		username = input("Choose username: ")
-		handler.set_user_id(username)
 		password = getpass.getpass("Choose password: ")
 		added = db.create_new_user(username, password)
 		if added == True:
 			print("User created successfully.")
 			input("Press enter to continue.")
+			handler.set_user_id(username)
 			return True
 		else:
 			print("User creation failed.")
