@@ -44,7 +44,6 @@ class ReservationHandler:
 	def add_room(self, room_id, room_name, is_reservable=True):
 		new_room = Room(room_id, room_name, is_reservable)
 		self.__rooms.append(new_room)
-		print(f"Room added: {new_room}")
 		#print(f"Room added: {new_room}")	# print-out of rooms added Uncomment for debug purposes
 		
 	def add_reservation(self, res_id, room_id, usr_id, start_time, end_time):
@@ -499,7 +498,12 @@ def login(handler) -> bool:
 			return False
 
 	elif selection == "2":
+		print("Username has to be at least 3 characters")
+		print("To cancel press 'Enter' with a blank username")
 		username = input("Choose username: ")
+		if username == "":
+			clear_terminal()
+			return False
 		password = getpass.getpass("Choose password: ")
 		added = db.create_new_user(username, password)
 		if added == True:
@@ -652,9 +656,10 @@ def main():
 	handler.add_room("R004", "Room4", True)
 	handler.add_room("S006", "Storage6", True)
 	result = False
+	load_reservations_from_json(handler)
 	while not result:
 		result = login(handler)
-		load_reservations_from_json(handler)
+ 
 	while result:
 		handler.update_reservation()
 		display_main_menu()
