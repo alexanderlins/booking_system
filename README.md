@@ -1,98 +1,176 @@
-# Booking System v1.0.0
+# Booking System v1.2.0
 ## Overview
 
 The Reservation System is a terminal-based Python application designed to manage room reservations. It provides functionality to:
 
-*   Make a new reservation
-*   Change an existing reservation (**TODO**)
-*   Print current reservations (**TODO**)
-*   Search for reservations by ID
-*   Remove reservations
-*   Store reservations to a file (**TODO**)
-
-The application uses a simple menu-driven interface and includes user authentication via a secure login system
-using salted SHA-256 hashing.
+* **Create new reservations**  
+* **Search for reservations**  
+* **List or print out existing reservations**  
+* **Remove reservations**  
+* **Store reservations** (load/save) to a JSON file  
+* **Authenticate users** with a secure login system backed by a SQLite database and `bcrypt` password hashing
 
 ## Features
 
-### User Authentication
+### 1. User Authentication
+User credentials are stored in a local SQLite database (`bookingsystem.db`). Passwords are hashed with **bcrypt** and salted automatically. Login attempts compare the user’s typed password (also hashed) to the stored hash in the database.
 
-Secure login functionality that compares a salted, hashed password against stored credentials. Predefined users
-such as `frst1301`, `igli2400`, and others are used for demonstration.
+### 2. Reservation Management
 
-### Reservation Management
+- **Make a Reservation**  
+  When selecting this option in the main menu, users can pick a room, set an ID for the reservation, and define start/end dates & times. The system checks for time conflicts with the same room or with the user’s other reservations to avoid overlaps.
 
-*   **Make Reservation**: Create a reservation by selecting a room and entering a reservation ID along with the
-start and end times.
-*   **Search Reservation**: Quickly find reservations by reservation ID.
-*   **Remove Reservation**: Remove an existing reservation through the menu.
-*   **Store to File** (**TODO**): Save reservations to a file.
+- **Search for a Reservation**  
+  A reservation can be quickly retrieved by searching its Reservation ID (binary search implementation).
 
-### Room Management
+- **List/Print Reservations**  
+  The system can display all future reservations or filter by room. You can view them in a tabular format or a simple list. For a quick 7-day schedule, there is also a special display option that splits each day into time segments (Early Morning, Morning, Afternoon, Evening).
 
-Room objects are created at runtime and stored in an array, allowing the system to manage room availability during application runtime.
+- **Remove a Reservation**  
+  A user can remove only their own reservations by entering the corresponding Reservation ID.
 
-### User Interface
+- **Store Reservations to File**  
+  All reservations can be loaded from or saved to a JSON file (`reservations.json`). This happens automatically when the program starts and when exiting the application (or by certain menu options). Past reservations (expired) are cleaned up upon each run.
 
-A terminal-based main menu guides the user through the available options. Each menu selection triggers a dedicated function that processes the user's request.
+### 3. Room Management
+Room objects (e.g., Room ID, name, and whether they are reservable) are created and stored in-memory. By default, there are a handful of rooms added at launch (e.g., `R001`, `R002`, etc.), and you can create more via `ReservationHandler().add_room(...)`.
+
+### 4. User Interface
+The application runs in the terminal and presents a straightforward menu after successful login. Options include:
+1. **Make Reservation**  
+2. **Display Reservations**  
+3. **Display 7-day Schedule**  
+4. **Search**  
+5. **Remove Reservation**  
+6. **Exit**  
+
+Selecting one of these leads to a function that handles the request.
 
 ## Environment and Tools
 
-*   **Programming Language**: Python 3.10
-*   **Operating Systems**: Cross-platform support (Windows, Linux, macOS)
-*   **Libraries/Modules**:
-    *   Standard libraries: `os`, `platform`, `datetime`, `getpass`, `hashlib`
-*   **Development Tools**:
-    *   Code editors/IDEs (e.g., Visual Studio Code, PyCharm)
-    *   Git for version control
-    *   Terminal/Command Prompt for running the application
+- **Programming Language**: Python 3.10+  
+- **Operating Systems**: Cross-platform (Windows, Linux, macOS)  
+- **Libraries/Modules**:
+  - [bcrypt](https://pypi.org/project/bcrypt/) for password hashing  
+  - [sqlite3](https://docs.python.org/3/library/sqlite3.html) for database integration  
+  - [pytest](https://docs.pytest.org/en/stable/) for testing
+- **Development Tools**:
+  - Text editors or IDEs (e.g., VS Code, PyCharm)  
+  - Git for version control  
 
 ## Installation
 
 1.  Ensure Python 3.10 is installed on your system. Higher or lower might not be supported.
 2.  Clone the repository: `git clone <repository-url>`
 3.  Navigate to the repository directory: `cd <repository-directory>`
-4.  Run the application: `python booking_system.py`
+4.  Install the dependencies in the requirements.txt file by running `pip install -r requirements.txt`
+5.  Run the application: `python booking_system.py`
+6.  By running the application for the first time, it will create a new database called `bookingsystem.db`
 
 ## Usage
 
 ### Login:
 
-When the application starts, it prompts for a username and password. Use one of the predefined accounts (e.g., `frst1301` or `igli2400`). The password is verified by generating a SHA-256 hash with a
-unique salt.
+*   At startup, you'll see a prompt for choosing either to log in or create a new account.
+*   In case you already have an account, you can safely choose that option and write your credentials.
+
+### Create new account
+
+*   At startup, in case you do not have an acccount, you can choose to create a new one.
+*   Type in safely the desired username and password
+*   You will then be automatically logged in using that account.
 
 ### Navigation:
 
-After login, the main menu displays options:
+After successful login, the main menu displays options:
 
-*   **Make Reservation**: Input details such as Room ID, Reservation ID, and the time interval.
-*   **Change Reservation** (**TODO**)
-*   **Print Reservation(s)** (**TODO**)
-*   **Search**: Find reservations quickly by entering a Reservation ID.
-*   **Remove Reservation**: Delete a reservation based on its Reservation ID.
-*   **Store to File** (**TODO**)
-*   **Exit**: Close the application. Select option 7 to exit the program.
+* **1 -  Make Reservation**
+
+Choose a Room ID (e.g., R001) from the list.
+
+Enter a unique Reservation ID of your choosing.
+
+Provide a start date/time and duration up to 4 hours.
+
+The system checks for conflicts with your other reservations or with existing ones in the selected room.
+
+* **2 - Display Reservations**
+
+Option 2 shows a table or list of all future reservations, optionally filtered by room.
+
+* **3 - Display 7-day Schedule**
+
+Option 3 (“Display 7-day Schedule”) shows a day-by-day, hour-block schedule for a single room over the next week.
+
+* **4 - Search**
+
+Option 4 lets you quickly find a reservation by typing its ID.
+
+* **5 - Remove Reservation**
+
+Option 5 lists existing reservations and prompts for the ID of the reservation you want to remove.
+
+You can only remove your own reservations (based on your username).
+
+* **X - Exit**
+
+Selecting “X” to exit triggers a save to reservations.json and closes the application.
+
+All in-memory reservations will be restored next time the application starts, except those that have already ended in the past.
 
 ## Code Structure
 
-The code is structured into the following components:
+**booking_system.py**
 
-*   **Main Script**: Contains the `main()` function that drives the login process and the main menu loop.
-*   **Classes**:
-    *   `Room`: Represents a room with attributes such as room ID, room name, and reservable status.
-    *   `Reservation`: Represents a reservation with attributes such as the associated room, user ID, reservation ID, start time, and end time.
-*   **Utility Functions**:
-    *   `clear_terminal()`: Clears the terminal window for better menu display.
-    *   `display_main_menu()`: Renders the main menu.
-    *   `handle_main_menu_selection()`: Routes the user's selection to the corresponding function.
+    Main driver code, including menu logic.
+
+    Contains classes Room, Reservation, and ReservationHandler.
+
+    Handles JSON loading/saving of reservation data.
+
+    Includes logic for searching, listing, sorting, and removing reservations.
+
+**database.py**
+
+    Sets up the SQLite database (bookingsystem.db) if it doesn’t exist.
+
+    Contains functions to create new users, login (verifying bcrypt hashes), etc.
+
+**test_booking_system.py**
+
+    A basic pytest test suite to validate certain aspects of room creation, reservation creation, etc.
+
+**requirements.txt**
+
+    Lists Python dependencies (including bcrypt and pytest).
+
+**README.md**
+
+    The documentation you’re currently reading!
 
 ## Development History & Updates
 
-The code has undergone several updates and enhancements, including:
+v1.0.0
 
-*   Initial template design by frst1301
-*   Addition of actual working functionality for making reservations, searching, and removing reservations
-*   Conversion of intermediary functions into dedicated action methods
+    Initial application structure.
+
+    Basic login system using hashlib.
+
+    Create/search/remove reservations functionality.
+
+    JSON-based saving and loading of reservation data.
+
+v1.2 (internal code version)
+
+    Extended display capabilities (table vs. list, plus 7-day schedule).
+
+    Sorting and conflict checks for reservations.
+
+    Database integration.
+
+    Safer user creation and authentication.
+
+    Automatic cleanup of past reservations on each run.
 
 ## People Involved
 ### Contributors
@@ -100,10 +178,10 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 
 | Name          | Contribution         |
 |---------------|----------------------|
-| frst1301      | **TODO**. |
-| igli2400      | **TODO**. |
-| anwa2301      | **TODO**. |
-| anov2400      | **TODO**. |
+| frst1301      | Original prototype, initial menu flow & JSON saving capabilities. |
+| igli2400      | Database integration, user creation, authentication and unit testing |
+| anwa2301      | Extended reservation features, visualization and testing |
+| anov2400      | Conflict checks, testing, code refactoring & cleanup |
 
 ## License
 This project is licensed under the MIT License.
